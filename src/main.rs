@@ -21,6 +21,9 @@ fn main() {
     let command_name = format!("{}", command.file_name().to_str().unwrap());
     println!("{command_name}");
 
-    // gets a one-line description from the manpages about selected command
-    println!("{}", command_description(&command_name));
+    // get description of the command
+    match command_description(&command_name) {
+        Ok(desc) => println!("{desc}"),
+        Err(err) => println!("{err}"),
+    }
 }
