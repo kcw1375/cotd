@@ -1,6 +1,7 @@
 use std::fs;
-use std::process::Command;
 use rand;
+
+use rust_cotd::*;
 
 fn main() {
     // the directory where executables are
@@ -21,8 +22,5 @@ fn main() {
     println!("{command_name}");
 
     // gets a one-line description from the manpages about selected command
-    Command::new("whatis")
-        .arg(format!("{command_name}"))
-        .spawn()
-        .expect("whatis command failed to start");
+    println!("{}", command_description(&command_name));
 }
