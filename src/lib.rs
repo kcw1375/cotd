@@ -7,15 +7,19 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn new(args: impl Iterator<Item = String>) -> Config {
+    pub fn new(mut args: impl Iterator<Item = String>) -> Result<Config, String> {
         // handles argument parsing
+
+        args.next(); // skip first element since that's the program name
+
         let mut show_info = false;
         for arg in args {
-            if arg == "-i" {
-                show_info = true;
+            match arg.as_str() {
+                "-i" => show_info = true,
+                _ => return Err("Not a valid flag.".to_string()),
             }
         }
-        Config {show_info}
+        Ok(Config {show_info})
     }
 }
 
