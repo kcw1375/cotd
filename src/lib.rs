@@ -1,6 +1,24 @@
 use std::fs;
 use std::process::Command;
 
+pub struct Config {
+    // stores the arguments passed in
+    pub show_info: bool
+}
+
+impl Config {
+    pub fn new(args: impl Iterator<Item = String>) -> Config {
+        // handles argument parsing
+        let mut show_info = false;
+        for arg in args {
+            if arg == "-i" {
+                show_info = true;
+            }
+        }
+        Config {show_info}
+    }
+}
+
 pub fn command_description(command_name: &str) -> Result<String, String> {
     // gets a one-line description from the manpages about selected command
 
