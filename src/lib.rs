@@ -6,7 +6,8 @@ use std::process::Command;
 
 pub struct Config {
     // stores the arguments passed in
-    pub show_info: bool,
+    pub show_info: bool, // show description about the command of the day
+    pub discard: bool, // don't save generated command to log file
 }
 
 impl Config {
@@ -15,14 +16,18 @@ impl Config {
 
         args.next(); // skip first element since that's the program name
 
+        // defaults for the flags
         let mut show_info = false;
+        let mut discard = false;
+
         for arg in args {
             match arg.as_str() {
                 "-i" => show_info = true,
+                "-d" => discard = true,
                 _ => return Err("Not a valid flag.".to_string()),
             }
         }
-        Ok(Config {show_info})
+        Ok(Config {show_info, discard})
     }
 }
 
@@ -46,7 +51,9 @@ pub fn run(config: &Config) {
         println!("{command_name}");
     }
 
-    write_to_log(&log, &command_name).unwrap();
+    if !config.discard {
+        write_to_log(&log, &command_name).unwrap();
+    }
 }
 
 pub fn command_description(command_name: &str) -> Result<String, String> {
