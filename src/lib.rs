@@ -19,6 +19,24 @@ impl Config {
     }
 }
 
+pub fn run(config: &Config) {
+    // the directory where executables are
+    // ie where $PATH points to
+    let dir = "/usr/bin";
+
+    // get random command from /usr/bin
+    let command_name = get_random_command(dir);
+    println!("{command_name}");
+
+    // get description of the command
+    if config.show_info {
+        match command_description(&command_name) {
+            Ok(desc) => println!("{desc}"),
+            Err(err) => println!("{err}"),
+        }
+    }
+}
+
 pub fn command_description(command_name: &str) -> Result<String, String> {
     // gets a one-line description from the manpages about selected command
 
