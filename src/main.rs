@@ -1,4 +1,5 @@
 use std::fs;
+use std::process::Command;
 use rand;
 
 fn main() {
@@ -15,5 +16,13 @@ fn main() {
     let n : usize = (rand::random::<f32>() * count as f32) as usize;
     let command = iter.nth(n).unwrap().unwrap();
 
-    println!("{command:?}");
+    // command name as string
+    let command_name = format!("{}", command.file_name().to_str().unwrap());
+    println!("{command_name}");
+
+    // gets a one-line description from the manpages about selected command
+    Command::new("whatis")
+        .arg(format!("{command_name}"))
+        .spawn()
+        .expect("whatis command failed to start");
 }
