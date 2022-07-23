@@ -30,7 +30,6 @@ pub fn run(config: &Config) {
 
     // get random command from /usr/bin
     let command_name = get_random_command(dir);
-    println!("{command_name}");
 
     // get description of the command
     if config.show_info {
@@ -38,6 +37,8 @@ pub fn run(config: &Config) {
             Ok(desc) => println!("{desc}"),
             Err(err) => println!("{err}"),
         }
+    } else {
+        println!("{command_name}");
     }
 }
 
