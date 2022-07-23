@@ -1,9 +1,12 @@
+use dirs;
 use std::fs;
+use std::io;
+use std::path;
 use std::process::Command;
 
 pub struct Config {
     // stores the arguments passed in
-    pub show_info: bool
+    pub show_info: bool,
 }
 
 impl Config {
@@ -27,6 +30,8 @@ pub fn run(config: &Config) {
     // the directory where executables are
     // ie where $PATH points to
     let dir = "/usr/bin";
+    let mut log = dirs::data_local_dir().unwrap();
+    log.push("cotd.log"); //default log file
 
     // get random command from /usr/bin
     let command_name = get_random_command(dir);
@@ -40,6 +45,8 @@ pub fn run(config: &Config) {
     } else {
         println!("{command_name}");
     }
+
+    write_to_log(&log, &command_name).unwrap();
 }
 
 pub fn command_description(command_name: &str) -> Result<String, String> {
@@ -72,4 +79,17 @@ pub fn get_random_command(dir: &str) -> String {
 
     let command_name = format!("{}", command.file_name().to_str().unwrap());
     command_name
+}
+
+pub fn write_to_log(logfile: &path::Path, data: &str) -> Result<(), io::Error>{
+    use std::io::Write;
+
+    let mut file = fs::OpenOptions::new()
+        .append(true)
+        .create(true)
+        .open(logfile)?;
+    
+    let writedata = String::from(data) + "\n";
+    file.write_all(writedata.as_bytes())?;
+    Ok(())
 }
