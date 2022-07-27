@@ -1,3 +1,4 @@
+use chrono;
 use dirs;
 use std::fs;
 use std::io;
@@ -52,7 +53,9 @@ pub fn run(config: &Config) {
     }
 
     if !config.discard {
-        write_to_log(&log, &command_name).unwrap();
+        let datestr = format_current_date();
+        let data = datestr + "\t" + &command_name;
+        write_to_log(&log, &data).unwrap();
     }
 }
 
@@ -99,4 +102,8 @@ pub fn write_to_log(logfile: &path::Path, data: &str) -> Result<(), io::Error>{
     let writedata = String::from(data) + "\n";
     file.write_all(writedata.as_bytes())?;
     Ok(())
+}
+
+fn format_current_date() -> String {
+    chrono::Utc::now().date().to_string()
 }
