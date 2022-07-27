@@ -3,8 +3,6 @@ use dirs;
 use std::fs;
 use std::fmt;
 use std::io;
-use std::io::BufRead;
-use std::path;
 use std::process::Command;
 
 pub struct Config {
@@ -71,7 +69,13 @@ pub fn run(config: &Config) {
             date: format_current_date(),
             command: command_name
         };
-        write_to_log(&log, &entry).unwrap();
+
+        let file = fs::OpenOptions::new()
+            .append(true)
+            .create(true)
+            .open(log)
+            .unwrap();
+        write_to_log(file, &entry).unwrap();
     }
 }
 
@@ -107,27 +111,15 @@ pub fn get_random_command(dir: &str) -> String {
     command_name
 }
 
-pub fn write_to_log(logfile: &path::Path, entry: &Entry) -> Result<(), io::Error>{
-    use std::io::Write;
-
-    let mut file = fs::OpenOptions::new()
-        .append(true)
-        .create(true)
-        .open(logfile)?;
-    
+pub fn write_to_log(mut writer: impl io::Write, entry: &Entry) -> Result<(), io::Error>{
     let writedata = entry.to_string() + "\n";
-    file.write_all(writedata.as_bytes())?;
-    Ok(())
+    writer.write_all(writedata.as_bytes())
 }
 
-pub fn read_log(logfile: &path::Path) -> Result<impl Iterator<Item = Entry>, io::Error> {
+pub fn read_log(reader: impl io::BufRead) -> Result<impl Iterator<Item = Entry>, io::Error> {
     // returns an iterator over each entry in the log
-    let file = fs::File::open(logfile)?;
-
-    let reader = io::BufReader::new(file);
-    
     // each line consists of {date:&str}\t{command_name:&str}
-    // convert Lines iterator into Iterator<(String, String)>
+    // convert Lines iterator into Iterator<Entry>
     let entry_iter = reader.lines().map(|l| {
         let line = l.unwrap(); // the line data
         let entry : Vec<&str>  = line.split("\t").collect();
@@ -153,7 +145,9 @@ mod tests {
         let mut log = dirs::data_local_dir().unwrap();
         log.push("cotd.log"); //default log file
 
-        for entry in read_log(&log).unwrap() {
+        let reader = io::BufReader::new(fs::File::open(log).unwrap());
+
+        for entry in read_log(reader).unwrap() {
             println!("{}", entry);
         }
     }
