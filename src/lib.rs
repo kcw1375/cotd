@@ -2,6 +2,7 @@ use chrono;
 use dirs;
 use std::fs;
 use std::io;
+use std::io::BufRead;
 use std::path;
 use std::process::Command;
 
@@ -104,6 +105,38 @@ pub fn write_to_log(logfile: &path::Path, data: &str) -> Result<(), io::Error>{
     Ok(())
 }
 
+pub fn read_log(logfile: &path::Path) -> Result<impl Iterator<Item = (String, String)>, io::Error> {
+    // returns an iterator over each entry in the log
+    let file = fs::File::open(logfile)?;
+
+    let reader = io::BufReader::new(file);
+    
+    // each line consists of {date:&str}\t{command_name:&str}
+    // convert Lines iterator into Iterator<(String, String)>
+    let entry_iter = reader.lines().map(|l| {
+        let line = l.unwrap(); // the line data
+        let entry : Vec<&str>  = line.split("\t").collect();
+        (entry[0].to_owned(), entry[1].to_owned())
+    });
+
+    Ok(entry_iter)
+}
+
 fn format_current_date() -> String {
     chrono::Utc::now().date().to_string()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn read_the_log() {
+        let mut log = dirs::data_local_dir().unwrap();
+        log.push("cotd.log"); //default log file
+
+        for entry in read_log(&log).unwrap() {
+            println!("{}, {}", entry.0, entry.1);
+        }
+    }
 }
