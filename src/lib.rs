@@ -151,4 +151,24 @@ mod tests {
             println!("{}", entry);
         }
     }
+
+    #[test]
+    fn write_to_byte_stream() {
+        let mut arr = [0u8; 100];
+        let mut stream : &mut [u8] = &mut arr;
+        let entry = Entry {
+            date: format_current_date(),
+            command: "bleh".to_string(),
+        };
+
+        write_to_log(&mut stream, &entry);
+
+        println!("{:?}", arr);
+
+        let correct_string = entry.to_string() + "\n";
+        let correct_bytes = correct_string.as_bytes();
+        println!("{:?}", correct_bytes);
+
+        assert_eq!(&arr[0..correct_bytes.len()], correct_bytes);
+    }
 }
