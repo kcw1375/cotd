@@ -1,6 +1,7 @@
 use chrono;
 use dirs;
 use std::fs;
+use std::fmt;
 use std::io;
 use std::io::BufRead;
 use std::path;
@@ -33,6 +34,18 @@ impl Config {
     }
 }
 
+pub struct Entry {
+    // an entry in the log file
+    pub date: String, // the date string
+    pub command: String, // the name of the command
+}
+
+impl fmt::Display for Entry {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}\t{}", self.date, self.command)
+    }
+}
+
 pub fn run(config: &Config) {
     // the directory where executables are
     // ie where $PATH points to
@@ -54,9 +67,11 @@ pub fn run(config: &Config) {
     }
 
     if !config.discard {
-        let datestr = format_current_date();
-        let data = datestr + "\t" + &command_name;
-        write_to_log(&log, &data).unwrap();
+        let entry = Entry {
+            date: format_current_date(),
+            command: command_name
+        };
+        write_to_log(&log, &entry).unwrap();
     }
 }
 
@@ -92,7 +107,7 @@ pub fn get_random_command(dir: &str) -> String {
     command_name
 }
 
-pub fn write_to_log(logfile: &path::Path, data: &str) -> Result<(), io::Error>{
+pub fn write_to_log(logfile: &path::Path, entry: &Entry) -> Result<(), io::Error>{
     use std::io::Write;
 
     let mut file = fs::OpenOptions::new()
@@ -100,12 +115,12 @@ pub fn write_to_log(logfile: &path::Path, data: &str) -> Result<(), io::Error>{
         .create(true)
         .open(logfile)?;
     
-    let writedata = String::from(data) + "\n";
+    let writedata = entry.to_string() + "\n";
     file.write_all(writedata.as_bytes())?;
     Ok(())
 }
 
-pub fn read_log(logfile: &path::Path) -> Result<impl Iterator<Item = (String, String)>, io::Error> {
+pub fn read_log(logfile: &path::Path) -> Result<impl Iterator<Item = Entry>, io::Error> {
     // returns an iterator over each entry in the log
     let file = fs::File::open(logfile)?;
 
@@ -116,7 +131,10 @@ pub fn read_log(logfile: &path::Path) -> Result<impl Iterator<Item = (String, St
     let entry_iter = reader.lines().map(|l| {
         let line = l.unwrap(); // the line data
         let entry : Vec<&str>  = line.split("\t").collect();
-        (entry[0].to_owned(), entry[1].to_owned())
+        Entry{
+            date: entry[0].to_owned(),
+            command: entry[1].to_owned(),
+        }
     });
 
     Ok(entry_iter)
@@ -136,7 +154,7 @@ mod tests {
         log.push("cotd.log"); //default log file
 
         for entry in read_log(&log).unwrap() {
-            println!("{}, {}", entry.0, entry.1);
+            println!("{}", entry);
         }
     }
 }
