@@ -70,12 +70,12 @@ pub fn run(config: &Config) {
             command: command_name
         };
 
-        let file = fs::OpenOptions::new()
+        let mut file = fs::OpenOptions::new()
             .append(true)
             .create(true)
             .open(log)
             .unwrap();
-        write_to_log(file, &entry).unwrap();
+        write_to_log(&mut file, &entry).unwrap();
     }
 }
 
@@ -111,7 +111,7 @@ pub fn get_random_command(dir: &str) -> String {
     command_name
 }
 
-pub fn write_to_log(mut writer: impl io::Write, entry: &Entry) -> Result<(), io::Error>{
+pub fn write_to_log(writer: &mut impl io::Write, entry: &Entry) -> Result<(), io::Error>{
     let writedata = entry.to_string() + "\n";
     writer.write_all(writedata.as_bytes())
 }
